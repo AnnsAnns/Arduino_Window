@@ -1,24 +1,23 @@
 // EUPL v1.2+, git@tomger.eu
 
 #include <SimpleDHT.h>
-#include <Stepper.h>
+#include <CheapStepper.h>
 
 // for DHT11, 
 //      VCC: 5V or 3V
 //      GND: GND
 //      DATA: 2
 int pinDHT11 = 2;
-bool isClosed = true;
+bool isClosed = false;
+const bool stepClockwise = true; // Welche Richtung
 const int SPU = 2048;
 const int FvDg = SPU/360*45; // 45°
 
 SimpleDHT11 dht11;
-Stepper Motor(SPU, 8, 9, 10, 11); // Init motor
+CheapStepper Motor (8, 9, 10, 11); // Init motor
 
 void setup() {
   Serial.begin(9600);
-
-  Motor.setSpeed(5); // 5 RPM
 }
 
 void loop() {
@@ -45,17 +44,18 @@ void loop() {
   }
   // Serial.println("");
   
-  if ((temperature >= 25 || humidity <= 44) && !isClosed) {
+  if ((temperature >= 26) && !isClosed) {
     Serial.print("It's too hot, starting motor! \n)");
 
-    Motor.step(FvDg);
+    Motor.moveDegrees(stepClockwise, 45);
+    
     delay(1000);
 
     isClosed = true;
-  } else if ((temperature <= 24 || humidity >= 43) && isClosed) {
+  } else if ((temperature <= 25) && isClosed) {
     Serial.print("It's too cold! \n");
 
-    Motor.step(-1*FvDg);
+    Motor.moveDegrees(!stepClockwise, 45);
     delay(1000);
 
     isClosed = false;
